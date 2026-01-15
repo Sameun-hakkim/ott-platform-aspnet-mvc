@@ -1,0 +1,623 @@
+﻿@model OTTPlatform.Models.Videos
+@*
+@{
+    ViewData["Title"] = "AdminPannel";
+} *@
+@{
+    Layout = null;
+}
+
+<style>
+    /* Dark Theme Styling */
+    body {
+        background-color: #121212;
+        color: #e0e0e0;
+    }
+
+    h1, h4 {
+        color: #e0e0e0;
+    }
+
+    table {
+        width: 100%;
+        margin-top: 20px;
+        color: #e0e0e0;
+        background-color: #333;
+    }
+
+    th, td {
+        padding: 10px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #444;
+        color: #fff;
+    }
+
+    td {
+        background-color: #222;
+        border-bottom: 1px solid #555;
+    }
+
+    tr:hover {
+        background-color: #555;
+    }
+
+    button {
+        background-color: #333;
+        color: #fff;
+        border: 1px solid #444;
+        padding: 5px 10px;
+        cursor: pointer;
+    }
+
+        button:hover {
+            background-color: #555;
+        }
+
+    #videoPopUpBtn {
+        background-color: #6200ea;
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        #videoPopUpBtn:hover {
+            background-color: #3700b3;
+        }
+
+    #UserPopUpBtn {
+        background-color: #6200ea;
+        color: #fff;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        #UserPopUpBtn:hover {
+            background-color: #3700b3;
+        }
+
+    .form-control {
+        background-color: #333;
+        color: #fff;
+        border: 1px solid #555;
+    }
+
+        .form-control:focus {
+            background-color: #444;
+            border-color: #6200ea;
+        }
+
+    .btn-primary {
+        background: #6200ea;
+        border: none;
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            background: #3700b3;
+        }
+
+    .btn-danger {
+        background: #CA0B00;
+        border: none;
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+        margin-top: 10px;
+    }
+
+        .btn-danger:hover {
+            background: #CC505B;
+        }
+
+    #videoUploadPopUp {
+        background-color: #333;
+        color: #e0e0e0;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    #UserPopUp {
+        background-color: #333;
+        color: #e0e0e0;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .row {
+        color: #e0e0e0;
+    }
+
+    .col-md-12 {
+        color: #e0e0e0;
+    }
+
+    #videoUploadPopUp button {
+        background-color: #6200ea;
+        color: #fff;
+    }
+
+        #videoUploadPopUp button:hover {
+            background-color: #3700b3;
+        }
+
+    #UserPopUp button {
+        /* background-color: #6200ea; */
+        color: #fff;
+    }
+
+        #UserPopUp button:hover {
+            background-color: #3700b3;
+        }
+
+    a {
+        color: #6200ea;
+        text-decoration: none;
+    }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+</style>
+
+<h1>Admin Pannel</h1>
+
+<h4>Videos</h4>
+<hr />
+<div id="videoList">
+    <button id="videoPopUpBtn" onclick="onPopUpClick()">upload</button>
+    <button id="UserPopUpBtn" onclick="onUserClick()">Users List</button>
+    <div style="display: flex; flex-direction: row; float: right;">
+        <a href="/Login/LoginPage" class="me-3" onclick="handleSignOut()">Sign out</a>
+    </div>
+
+    <br />
+    <table class="table table-dark table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Video</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var videos in ViewBag.videos)
+            {
+                <tr>
+                    <td>
+                        <video width="320" height="240" controls poster="@Url.Content(videos.TemplateURL)">
+                            <source src="@Url.Content(videos.VideoURL)" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </td>
+                    <td>
+                        <input type="hidden" id="VideoID" value="@videos.Id" class="form-control" />
+                        @videos.VideoName
+                        <br />
+                        <span>(@videos.LanguageName) - @videos.CategoryName</span>
+                    </td>
+                    <td>@videos.VideoDescription</td>
+                    <td>
+                        <button type="button" class="btn btn-primary edit-video-btn" data-id="@videos.Id">Edit</button>
+                        <br />
+                        @if (videos.VideoStatus == true)
+                        {
+                            <button type="button" class="btn btn-danger delete-video-btn" data-id="@videos.Id">Delete</button>
+
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-danger undo-video-btn" data-id="@videos.Id">Undo</button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+
+    <div class="row" id="videoUploadPopUp" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000;">
+        <div class="col-md-12">
+            <div id="AdminPannel" style="background: #1e1e1e; padding: 20px 20px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.8); max-width: 600px; margin: 0 auto;">
+                <button id="videoPopUpBtn" onclick="onPopUpClick()" class="btn btn-outline-secondary" style="background: transparent; border: 2px solid #007bff; color: #007bff; padding: 8px 20px; border-radius: 5px; transition: background-color 0.3s ease, color 0.3s ease;">
+                    x
+                </button>
+
+                <h1 style="color: #f8f9fa; text-align: center; font-weight: 600; margin-bottom: 30px;">Upload Video</h1>
+
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="category" style="color: #bdbdbd;">Category</label>
+                    <select id="category" name="Id" class="form-control" style="background: #292929; color: #f5f5f5; border-radius: 5px; padding: 10px;">
+                        <option value="">Select Category</option>
+                        @foreach (var category in ViewBag.Categories)
+                        {
+                            <option value="@category.Id">@category.CategoryName</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="Language" style="color: #bdbdbd;">Language</label>
+                    <select id="Language" name="Id" class="form-control" style="background: #292929; color: #f5f5f5; border-radius: 5px; padding: 10px;">
+                        <option value="">Select Language</option>
+                        @foreach (var Lang in ViewBag.Languages)
+                        {
+                            <option value="@Lang.Id">@Lang.LanguageName</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="VideoName" style="color: #bdbdbd;">Video Name</label>
+                    <input type="text" id="VideoName" name="VideoName" class="form-control" style="background: #292929; color: #f5f5f5; border-radius: 5px; padding: 10px;" />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label for="VideoDescription" style="color: #bdbdbd;">Video Description</label>
+                    <input type="text" id="VideoDescription" name="VideoDescription" class="form-control" style="background: #292929; color: #f5f5f5; border-radius: 5px; padding: 10px;" />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label id="VideoUpload1" for="VideoUpload" style="color: #bdbdbd;">Upload Video</label>
+                    <input type="file" id="VideoUpload" name="VideoUpload" class="form-control" accept="video/*" style="background: #292929; color: #f5f5f5; border-radius: 5px; padding: 10px;" />
+                    <video id="VideoURL" width="320" height="240" controls poster="">
+                        <source id="videoSource" src="" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label id="TemplateURL1" for="TemplateURL" style="color: #bdbdbd;">Upload thumbnail for Video</label>
+                    <input type="file" id="TemplateURL" name="TemplateURL" class="form-control" accept="image/*" style="background: #292929; color: #f5f5f5; border-radius: 5px; padding: 10px;" />
+                </div>
+
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <button type="button" id="submitVideo" class="btn btn-primary" style="background: #007bff; border: none; width: 100%; padding: 10px; border-radius: 5px; transition: background-color 0.3s ease;">
+                        Create
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" id="UserPopUp" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000;">
+        <div class="col-md-12">
+            <div id="AdminPannel" style="background: #1e1e1e; padding: 20px 20px; border-radius: 10px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.8); max-width: 600px; margin: 0 auto;">
+                <button id="videoPopUpBtn" onclick="onUserClick()" class="btn btn-outline-secondary" style="background: transparent; border: 2px solid #007bff; color: #007bff; padding: 8px 20px; border-radius: 5px; transition: background-color 0.3s ease, color 0.3s ease;">
+                    x
+                </button>
+
+                <h1 style="color: #f8f9fa; text-align: center; font-weight: 600; margin-bottom: 30px;">User List</h1>
+
+                <table class="table table-dark table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>UserType</th>
+                            <th>UserName</th>
+                            <th>Password</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var logins in ViewBag.login)
+                        {
+                            @if (logins.UserType == "User")
+                            {
+                                <tr>
+                                    <td>
+                                        <input type="hidden" id="UserId" value="@logins.Id" class="form-control" />
+
+                                        <span>(@logins.UserType)</span>
+                                    </td>
+                                    <td>
+                                        <span>(@logins.UserName)</span>
+                                    </td>
+                                    <td>
+                                        <span>(@logins.password)</span>
+                                    </td>
+                                    <td>
+
+                                        @if (logins.UserStatus == true)
+                                        {
+                                            <button type="button" class="btn btn-primary inactive-User-btn" data-id="@logins.Id">Inactive</button>
+
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-danger active-User-btn" data-id="@logins.Id">Active</button>
+
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                           
+                        }
+                    </tbody>
+                </table>
+               
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+
+
+@* 
+@section Scripts { *@
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+      
+        $(document).ready(function () {
+            $('#submitVideo').click(function () {
+
+                // var videoId = $(this).data('id');
+                 var videoId = $('#VideoID').val()
+                if (!videoId) {
+                        videoId = 0
+                };
+
+                var videoData = {
+                    Id: videoId,
+                    CategoryID: $('#category').val(),
+                    LanguageID: $('#Language').val(),
+                    VideoName: $('#VideoName').val(),
+                    VideoDescription: $('#VideoDescription').val(),
+                };
+
+                var formData = new FormData();
+
+                for (var key in videoData) {
+                    formData.append(key, videoData[key]);
+                }
+
+
+                if (videoId <= 0) {
+                    var videoFile = $('#VideoUpload')[0].files[0];
+                    if (videoFile) {
+                        formData.append('VideoUpload', videoFile);
+                    }
+
+                    var TemplateFile = $('#TemplateURL')[0].files[0];
+                    if (TemplateFile) {
+                        formData.append('TemplateURL', TemplateFile);
+                    }
+                } else {
+                    formData.append('VideoUpload', null);
+                    formData.append('TemplateURL', null);
+                }
+
+
+
+
+                $.ajax({
+                    url: '/Video/AdminPannel',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        alert('Video created successfully!');
+                        onPopUpClick();
+                        location.reload();
+
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Failed to save the video. Please try again.');
+                        console.error(error);
+                    }
+                });
+            });
+
+            $('.inactive-User-btn').click(function () {
+                var userId = $(this).data('id');
+                $.ajax({
+                    url: '/Video/UserDelete',
+                    type: 'POST',
+                    data: { Id: userId },
+                    success: function (response) {
+                        alert('User Inactivated successfully!');
+                        // reloadPopup();
+                        location.reload();
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Failed to inactivate the user. Please try again.');
+                        console.error(error);
+                    }
+                });
+            });
+
+            $('.active-User-btn').click(function () {
+                var userId = $(this).data('id');
+                $.ajax({
+                    url: '/Video/UserUndo',
+                    type: 'POST',
+                    data: { Id: userId },
+                    success: function (response) {
+                        alert('User Activated successfully!');
+                        // reloadPopup();
+                        location.reload();
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Failed to Activate the user. Please try again.');
+                        console.error(error);
+                    }
+                });
+            });
+
+            $('.delete-video-btn').click(function () {
+                var videoId = $(this).data('id');
+                $.ajax({
+                    url: '/Video/VideoDelete',
+                    type: 'POST',
+                    data: { Id: videoId },
+                    success: function (response) {
+                        alert('Video deleted successfully!');
+                        location.reload();
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Failed to delete the video. Please try again.');
+                        console.error(error);
+                    }
+                });
+            });
+
+            $('.undo-video-btn').click(function () {
+                var videoId = $(this).data('id');
+                $.ajax({
+                    url: '/Video/VideoUndo',
+                    type: 'POST',
+                    data: { Id: videoId },
+                    success: function (response) {
+                        alert('Video Retrived successfully!');
+                        location.reload();
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Failed to Retrive the video. Please try again.');
+                        console.error(error);
+                    }
+                });
+            });
+
+            $('.edit-video-btn').click(function () {
+                var videoId = $(this).data('id');
+
+
+                $.ajax({
+                    url: '/Video/GetVideoDetails',
+                    type: 'GET',
+                    data: { id: videoId },
+                    success: function (response) {
+                        console.log(response);
+                        if (response.success) {
+
+                            populatePopUp(response);
+                            // $('#submitVideo').data('id', videoId);
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert('Failed to fetch video details. Please try again.');
+                        console.error(error);
+                    }
+                });
+            });
+        });
+
+        function handleSignOut() {
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = "/Login/LoginPage";
+        }
+
+        function populatePopUp(response) {
+            // $('#VideoURL').prop('disabled', true);
+
+
+            // $('#TemplateField').prop('disabled', true);
+            // $('#TemplateField').val(response.data.templateURL);
+            // $('#VideoURL').val(response.data.videoURL);
+            $('#VideoUpload').hide();
+            $('#TemplateURL').hide();
+            $('#VideoUpload1').hide();
+            $('#TemplateURL1').hide();
+            $('#videoUploadPopUp').show();
+            $('#VideoID').val(response.data.id);
+            $('#VideoName').val(response.data.videoName);
+            $('#VideoDescription').val(response.data.videoDescription);
+            $('#category').val(response.data.categoryID);
+            $('#Language').val(response.data.languageID);
+            
+
+             $('#VideoURL').show();
+            $('#videoSource').show();
+             $('#videoSource').attr('src', response.data.videoURL); 
+            $('#VideoURL').attr('poster', response.data.templateURL);
+
+             $('#VideoURL')[0].load();
+                $('#VideoURL')[0].play();  
+        };
+       
+        function onPopUpClick(){
+
+            $('#VideoID').val('');
+
+            $('#category').val('');
+            $('#Language').val('');
+
+            $('#VideoName').val('');
+            $('#VideoDescription').val('');
+             // $('#videoSource').attr('src', ''); 
+            $('#VideoURL').attr('poster', '');
+
+            $('#VideoURL')[0].pause();              
+            $('#VideoURL')[0].currentTime = 0;     
+            $('#videoSource').attr('src', '');     
+            $('#VideoURL')[0].load();   
+            
+            $('#VideoURL').hide();
+            $('#videoSource').hide();
+
+
+            $('#VideoUpload1').show();
+            $('#VideoUpload').show();
+            $('#TemplateURL1').show();
+            $('#TemplateURL').show();
+
+            $('#VideoUpload').val('');
+            $('#TemplateURL').val('');
+
+
+            $('#VideoUpload1').prop('disabled', false);
+            $('#VideoUpload').prop('disabled', false);
+            $('#TemplateURL1').prop('disabled', false);
+            $('#TemplateURL').prop('disabled', false);
+
+
+
+             
+            // $('#TemplateURL2').hide();
+            // $('#TemplateField').hide();
+
+
+
+            var popup = $('#videoUploadPopUp');
+
+            if (popup.is(':visible')) {
+                popup.hide();
+            } else {
+                popup.show();
+            }
+        };
+        function onUserClick() {
+            var popup = $('#UserPopUp');
+
+            if (popup.is(':visible')) {
+                popup.hide();
+            } else {
+                popup.show();
+            }
+
+
+        }
+
+
+
+    </script>
+
+@* } *@

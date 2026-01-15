@@ -1,0 +1,378 @@
+﻿@model OTTPlatform.Models.Videos
+@{
+    Layout = null;
+}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+    body {
+        background-color: #121212;
+        color: #ffffff;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .card {
+        background-color: #1e1e1e;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        color: #ffffff;
+        margin-top: 50px;
+    }
+
+    #Category a {
+        margin: 5px;
+        background-color: #007bff;
+        color: #ffffff;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+        #Category a:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+    .card-body {
+        padding: 20px;
+    }
+
+    h1, h3 {
+        color: #f8f9fa;
+        font-weight: 600;
+    }
+
+    p {
+        color: #bdbdbd;
+    }
+
+    .chat-box {
+        background: #292929;
+        border-radius: 8px;
+        padding: 10px;
+        max-height: 250px;
+        overflow-y: auto;
+        border: 1px solid #444;
+    }
+
+    .message {
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #444;
+    }
+
+        .message p {
+            margin: 0;
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .message span {
+            color: #bdbdbd;
+        }
+
+    .input-container {
+        margin-top: 15px;
+    }
+
+    .form-control {
+        color: #ffffff;
+        background-color: #292929;
+        border: 1px solid #444;
+    }
+
+        .form-control::placeholder {
+            color: #bdbdbd;
+        }
+
+    .btn-primary {
+        background: #007bff;
+        border: none;
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+
+    .own-message {
+        text-align: right;
+        background-color: #3f3f3f;
+        color: #fff;
+        padding: 8px;
+        border-radius: 10px;
+        margin: 5px 0;
+/*         //max-width: 70%;
+ */        align-self: flex-end;
+    }
+
+    .other-message {
+        text-align: left;
+        background-color: #292929;
+        color: #bdbdbd;
+        padding: 8px;
+        border-radius: 10px;
+        margin: 5px 0;
+/*         //max-width: 70%;
+ */        align-self: flex-start;
+    }
+
+</style>
+
+<div class="container">
+    <div class="header-section d-flex justify-content-between align-items-center mt-4">
+        <h1>Chat with Movie Lovers!</h1>
+        <div>
+            <h4>Welcome, @ViewBag.User.UserName!</h4>
+            <a href="/Login/LoginPage" class="me-3" onclick="handleSignOut()">Sign out</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+               @*  <div id="Category" class="col-md-4">
+                    <h3>Categories</h3>
+                    @foreach (var category in ViewBag.Categories)
+                    {
+                        <a href="@Url.Action("VideoChat", new { logInID = ViewBag.User.Id, CategoryId = category.Id })" class="d-block mb-2">
+                            @category.CategoryName
+                        </a>
+                    }
+                </div> *@
+                <div id="Category" class="col-md-4">
+                    <h3>Categories</h3>
+                    @foreach (var category in ViewBag.Categories)
+                    {
+                        <a href="@Url.Action("VideoChat", new { logInID = ViewBag.User.Id, CategoryId = category.Id })"
+                           class="d-block mb-2 category-link"
+                           data-category-id="@category.Id">
+                            @category.CategoryName
+                        </a>
+                    }
+                </div>
+
+                <div class="col-md-8">
+                    <h3 class="mb-3">Chat Room - @ViewBag.cateName.CategoryName</h3>
+            @*         <div class="chat-box">
+                        @foreach (var videoMsg in ViewBag.videoMessages)
+                        {
+                            <div class="message">
+                                <p>@videoMsg.Username</p>
+                                <span>@videoMsg.UserMessage</span>
+                            </div>
+                        }
+                    </div> *@
+
+                    <div class="chat-box">
+                        @foreach (var videoMsg in ViewBag.videoMessages)
+                        {
+                            <div class="message @(videoMsg.Id == ViewBag.User.Id ? "own-message" : "other-message")">
+                                <p>@videoMsg.Username</p>
+                                <span>@videoMsg.UserMessage</span>
+                            </div>
+                        }
+                    </div>
+@*                     <div class="chat-box"></div>
+ *@
+
+                    <input type="hidden" id="UserID" value="@ViewBag.User.Id" />
+                    <input type="hidden" id="CategoryID" value="@ViewBag.CategoryID" />
+
+                    <div class="input-container">
+                        <input type="text" id="UserMessage" class="form-control" placeholder="Type here..." />
+                        <button type="button" id="submitChat" class="btn btn-primary mt-2">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+@{
+    await Html.RenderPartialAsync("_ValidationScriptsPartial");
+}
+
+<script>
+
+    // $(document).ready(function () {
+    //     function fetchMessages() {
+    //         $.get('/Video/GetMessages', { CategoryId: $("#CategoryID").val() }, function (messages) {
+    //             $(".chat-box").html(""); // Clear chat box
+
+    //             messages.forEach(msg => {
+    //                 let alignClass = msg.userId == $("#UserID").val() ? "own-message" : "other-message";
+    //                 $(".chat-box").append(`<div class="message ${alignClass}"><p>${msg.username}</p><span>${msg.userMessage}</span></div>`);
+    //             });
+
+    //             $(".chat-box").scrollTop($(".chat-box")[0].scrollHeight); // Auto-scroll
+    //         });
+    //     }
+
+    //     $("#submitChat").click(function () {
+    //         let chatData = {
+    //             UserId: $("#UserID").val(),
+    //             CategoryID: $("#CategoryID").val(),
+    //             UserMessage: $("#UserMessage").val().trim()
+    //         };
+
+    //         if (!chatData.UserMessage) return alert('Enter a message.');
+
+    //         $.post('/Video/ChatInsert', chatData, function () {
+    //             $("#UserMessage").val(''); // Clear input
+    //             fetchMessages(); // Update chat instantly
+    //         });
+    //     });
+
+    //     // Handle category click
+    //     $("#Category a").click(function (e) {
+    //         e.preventDefault(); // Prevent page reload
+    //         let newCategoryId = $(this).attr("href").split("CategoryId=")[1]; // Extract CategoryId
+
+    //         $("#CategoryID").val(newCategoryId); // Update hidden input
+    //         fetchMessages(); // Load new messages
+    //     });
+
+    //     setInterval(fetchMessages, 3000); // Auto-refresh chat every 3 seconds
+    // });
+
+
+    $(document).ready(function () {
+        
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .build();
+
+        
+        connection.start().catch(err => console.error(err));
+
+        
+        $("#submitChat").click(function () {
+            let userId = $("#UserID").val();
+            let categoryId = $("#CategoryID").val();
+            let message = $("#UserMessage").val().trim();
+
+            if (!message) {
+                alert("Please enter a message.");
+                return;
+            }
+
+            connection.invoke("SendMessage", parseInt(userId), parseInt(categoryId), message)
+                .catch(err => console.error(err));
+
+            $("#UserMessage").val(""); 
+        });
+
+      
+        // connection.on("ReceiveMessage", function (userId, message) {
+        //     $(".chat-box").append(`<div class="message"><span>${message}</span></div>`);
+        // });
+
+        connection.on("ReceiveMessage", function (userId, username, message) {
+            let currentUserId = $("#UserID").val(); 
+            let alignClass = userId == currentUserId ? "own-message" : "other-message"; 
+
+            $(".chat-box").append(`
+            <div class="message ${alignClass}">
+                <p>${username}</p>
+                <span>${message}</span>
+            </div>
+        `);
+
+            $(".chat-box").scrollTop($(".chat-box")[0].scrollHeight); 
+        });
+    });
+
+    //Script previous///
+
+    // $(document).ready(function () {
+        // $('#submitChat').click(function () {
+        //     var UserId = $('#UserID').val();
+        //     var CategoryID = $('#CategoryID').val();
+        //     var UserMessage = $('#UserMessage').val();
+
+        //     if (!UserMessage || UserMessage.trim() === "") {
+        //         alert('Please type a message.');
+        //         return;
+        //     }
+
+        //     var ChatData = {
+        //         UserId: UserId,
+        //         CategoryID: CategoryID,
+        //         UserMessage: UserMessage
+        //     };
+
+        //     $.ajax({
+        //         url: '/Video/ChatInsert',
+        //         type: 'POST',
+        //         data: ChatData,
+        //         success: function (response) {
+        //             alert('Message sent successfully!');
+        //             location.reload();
+        //         },
+        //         error: function (xhr, status, error) {
+        //             alert('Failed to send message. Please try again.');
+        //             console.error(error);
+        //         }
+        //     });
+        // });
+    //  });
+
+    //     function fetchMessages() {
+    //         $.get('/Video/GetMessages', { CategoryId: $("#CategoryID").val() }, function (messages) {
+    //             $(".chat-box").html(""); 
+
+    //             messages.forEach(msg => {
+    //                 let alignClass = msg.userId == $("#UserID").val() ? "own-message" : "other-message";
+    //                 $(".chat-box").append(`<div class="message ${alignClass}"><p>${msg.username}</p><span>${msg.userMessage}</span></div>`);
+    //             });
+
+    //             $(".chat-box").scrollTop($(".chat-box")[0].scrollHeight); 
+    //         });
+    //     }
+
+    //     $("#submitChat").click(function () {
+    //         let chatData = {
+    //             UserId: $("#UserID").val(),
+    //             CategoryID: $("#CategoryID").val(),
+    //             UserMessage: $("#UserMessage").val().trim()
+    //         };
+
+    //         if (!chatData.UserMessage) return alert('Enter a message.');
+
+    //         $.post('/Video/ChatInsert', chatData, function () {
+    //             $("#UserMessage").val(''); 
+    //             fetchMessages(); 
+    //         });
+    //     });
+
+    //     setInterval(fetchMessages, 3000); 
+  
+    // function fetchMessages() {
+    //     $.ajax({
+    //         url: '/Video/GetMessages', 
+    //         type: 'GET',
+    //         success: function (data) {
+    //             $(".chat-box").html(data); 
+    //         },
+    //         error: function (xhr, status, error) {
+    //             console.error(error);
+    //         }
+    //     });
+    // };
+    // setInterval(fetchMessages, 3000);
+
+
+    function handleSignOut() {
+        sessionStorage.clear();
+        localStorage.clear();
+        window.location.href = "/Login/LoginPage";
+    }
+</script>

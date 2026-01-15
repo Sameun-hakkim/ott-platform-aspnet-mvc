@@ -1,0 +1,203 @@
+﻿
+
+ @model OTTPlatform.Models.Videos
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        h1, h4 {
+            color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        #Category a {
+            margin: 5px;
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+            #Category a:hover {
+                background-color: #0056b3;
+                transform: scale(1.05);
+            }
+
+        .card {
+            background-color: #1e1e1e;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.8);
+        }
+
+            .card video {
+                border-radius: 8px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            }
+
+        .card-img-top {
+            width: 100%;
+            height: 200px; 
+            object-fit: cover; 
+            border-radius: 8px;
+        }
+        .card-title {
+            font-size: 1rem;
+            color: #f8f9fa;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .card-body {
+            text-align: center;
+        }
+
+        #videoGrid {
+            padding: 20px;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+            .header-section h1, .header-section h4 {
+                margin: 0;
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-section">
+            <div>
+                <h1>Grabbed your Popcorn?</h1>
+                <h4>Movies List</h4>
+            </div>
+            <div>
+                <h4>Welcome, @ViewBag.User.UserName!</h4>
+                <a href="/Login/LoginPage" class="me-3" onclick="handleSignOut()">Sign out</a>
+@*                 <a href="/Video/VideoChat" class="me-3" onclick="handleChatting()">Click to Chat</a>
+ *@                
+                <a href="@Url.Action("VideoChat", new { logInID = ViewBag.User.Id, CategoryId = 0 })">
+                    Click to Chat
+                </a>
+            </div>
+        </div>
+
+        <div id="Category" class="d-flex flex-wrap mb-4">
+            <a href="@Url.Action("UserPannel", new { logInID = ViewBag.User.Id, categoryName = "" })" class="me-3">
+                All
+            </a>
+            @foreach (var category in ViewBag.Categories)
+            {
+                <a href="@Url.Action("UserPannel", new { logInID = ViewBag.User.Id, categoryName = category.CategoryName })">
+                    @category.CategoryName
+                </a>
+            }
+        </div>
+        <div id="SearchBar" class="row mb-4">
+            <div class="col-md-9">
+                <input type="text" id="searchQuery" placeholder="Search videos..." class="form-control" value="@ViewBag.SearchQuery" />
+
+            </div>
+            <div class="col-md-3">
+                <button type="button" class="btn btn-primary" onclick="searchVideos()">Search</button>
+
+            </div>
+            
+        </div>
+
+        <div id="videoGrid" class="container">
+            <div class="row">
+                @foreach (var video in ViewBag.videos)
+                {
+                    <div class="col-md-3 mb-4">
+                        <div class="card">
+                            <a href="@Url.Action("VideoDisplay", new { Id = video.Id, logInID = ViewBag.User.Id })" class="card-title">
+                                <img src="@Url.Content(video.TemplateURL)" alt="@video.VideoName" width="100%" class="card-img-top">
+                            </a>
+                            <div class="card-body">
+                                <a href="@Url.Action("VideoDisplay", new { Id = video.Id, logInID = ViewBag.User.Id })" class="card-title">
+                                    @video.VideoName
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        $(document).ready(function () {
+            
+            history.pushState(null, null, location.href);
+
+            
+            window.addEventListener("popstate", function (event) {
+                console.log("Back button or popstate event triggered.");
+                
+                history.pushState(null, null, location.href);
+            });
+        });
+
+        
+        window.onunload = function () {
+            null;
+        };
+        function handleSignOut() {
+            sessionStorage.clear();
+            localStorage.clear();
+            window.location.href = "/Login/LoginPage";
+        }
+        // function handleChatting() {
+        //     sessionStorage.clear();
+        //     localStorage.clear();
+        //     window.location.href = "/Video/VideoChat";
+        // }
+        function searchVideos() {
+            var searchQuery = document.getElementById('searchQuery').value;
+            var url = new URL(window.location.href);
+            var params = new URLSearchParams(url.search);
+
+           
+            if (searchQuery) {
+                params.set('searchQuery', searchQuery);
+            } else {
+                params.delete('searchQuery');  
+            }
+
+            
+            url.search = params.toString();
+            window.location.href = url.toString();
+        };
+    </script>
+
+
+</body>
+
+
+</html>
